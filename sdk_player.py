@@ -39,11 +39,11 @@ class Cell:
 
 
 class Player:
-    def init(self, player_id, energies_limit,
-             camera_unit_energy, obstacles, land_scores,
-             max_round=500, warranty_period=20,
-             robot_num=4,
-             ) -> None:
+    def prepare(self, player_id, energies_limit,
+                camera_unit_energy, obstacles, land_scores,
+                max_round=500, warranty_period=20,
+                robot_num=4, **kwargs
+                ) -> None:
         self.warranty_period = warranty_period
         self.world_height = len(land_scores)
         self.world_width = len(land_scores[0])
@@ -92,11 +92,11 @@ class Player:
             self.cell(engine['y'], engine['x']).energy = engine['amount']
         for r in self.robots:
             self.bfs(r)
-        return [
+        return dict(actions=[
             dict(robot_id=r["robot_id"], move=r["move"],
                  install_camera=r["install_camera"])
             for r in self.robots
-        ]
+        ])
 
     def get_camera_max_score(self, c1: Cell):
         cam_index = None
@@ -231,7 +231,7 @@ class World:
     def run(self):
         max_round = 6
         for i, p in enumerate(self.players):
-            p.init(
+            p.prepare(
                 i, self.energies_limit, self.camera_unit_energy,
                 self.obstacles(),
                 self.land_scores(),
@@ -260,7 +260,7 @@ class World:
                 c.warranty_period -= 1  # 每回合之前保护回合数减1
 
     def do_actions(self, actions):
-        for action in actions:
+        for action in actions["actions"]:
             info = self.do_action(**action)
             if info:
                 raise Exception("do_error", info)
